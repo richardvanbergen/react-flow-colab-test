@@ -25,6 +25,10 @@ import {
 
 import { PlusCircledIcon, ResetIcon } from '@radix-ui/react-icons'
 import '@xyflow/react/dist/style.css';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@radix-ui/react-label';
+import { Button } from '@/components/ui/button';
 
 const port = process.env.NEXT_PUBLIC_WS_PORT || 3000
 
@@ -38,29 +42,36 @@ const useWebSocket = () => {
   }
 }
 
-const handleStyle = { left: 10 };
-
-function TextUpdaterNode({ data }: { data: any }) {
-  const onChange = useCallback((evt: any) => {
-    console.log(evt.target.value);
-  }, []);
-
+export function CardWithForm({ data }: { data: any }) {
+  console.log(data)
   return (
     <>
-      <Handle type="target" position={Position.Top} />
-      <div>
-        <label htmlFor="text">Text:</label>
-        <input id="text" name="text" onChange={onChange} className="nodrag" />
-      </div>
-      <Handle type="source" position={Position.Bottom} id="a" />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="b"
-        style={handleStyle}
-      />
+      <Handle type="target" position={Position.Left} />
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Create project</CardTitle>
+          <CardDescription>Deploy your new project in one-click.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" placeholder="Name of your project" />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+              </div>
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline">Cancel</Button>
+          <Button>Deploy</Button>
+        </CardFooter>
+      </Card>
+      <Handle type="target" position={Position.Right} />
     </>
-  );
+  )
 }
 
 export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edge>() {
@@ -107,8 +118,8 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
 
         return newNodes;
       });
-
     };
+
     yNodesMap.observe(syncNodes);
 
     return () => {
@@ -154,7 +165,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
         x: 100,
         y: 100,
       }),
-      type: 'textUpdater',
+      type: 'card',
       data: { label: `Node ${id}` },
       origin: nodeOrigin,
     } as unknown as NodeType;
@@ -236,7 +247,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
     [],
   );
 
-  const nodeTypes = useMemo(() => ({ textUpdater: TextUpdaterNode }), []);
+  const nodeTypes = useMemo(() => ({ card: CardWithForm }), []);
 
   return (
     <div className="h-screen w-screen">
