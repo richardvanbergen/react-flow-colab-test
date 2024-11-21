@@ -101,15 +101,12 @@ export function OutputCard(props: NodeProps<CardNode>) {
   const name = useDocumentStore(state => state.name)
   const yContentMap = useDocumentStore(state => state.yContentMap)
   const [prompt, setPrompt] = useState('')
+  const [output, setOutput] = useState('')
 
   const { object, submit } = useObject({
     api: '/api/chat',
     schema: outputSchema,
   });
-
-  const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPrompt(event.target.value)
-  }
 
   const getActiveConnections = useCallback(() => {
     const edges = getEdges();
@@ -135,6 +132,33 @@ export function OutputCard(props: NodeProps<CardNode>) {
     submit(submissionInput)
   }
 
+  useEffect(() => {
+    if (object?.output) {
+      yContentMap?.set(`${name}-${id}`, object.output)
+    }
+  }, [object])
+
+  useEffect(() => {
+    const syncContent = () => {
+      const prompt = yContentMap?.get(`${name}-${id}-prompt`)
+      const output = yContentMap?.get(`${name}-${id}`)
+      setPrompt(prompt || '')
+      setOutput(output || '')
+    }
+
+    yContentMap?.observe(syncContent)
+    syncContent()
+
+    return () => {
+      yContentMap?.unobserve(syncContent)
+    }
+  }, [name])
+
+  function handlePromptChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    const value = event.target.value;
+    yContentMap?.set(`${name}-${id}-prompt`, value)
+  }
+
   return (
     <>
       <Card className="w-[350px] card-node">
@@ -150,7 +174,7 @@ export function OutputCard(props: NodeProps<CardNode>) {
 
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor={`${reactId}-output`}>Output</Label>
-              <Textarea rows={5} id={`${reactId}-output`} name="output" disabled value={object?.output} />
+              <Textarea rows={5} id={`${reactId}-output`} name="output" disabled value={output} />
             </div>
           </div>
         </CardContent>
