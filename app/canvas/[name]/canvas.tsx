@@ -21,6 +21,7 @@ import {
   OnEdgesChange,
   Position,
   Handle,
+  // NodeProps,
 } from '@xyflow/react';
 
 import { PlusCircledIcon, ResetIcon } from '@radix-ui/react-icons'
@@ -30,23 +31,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@radix-ui/react-label';
 import { Button } from '@/components/ui/button';
 
-const port = process.env.NEXT_PUBLIC_WS_PORT || 3000
+const port = 1234
 
-const useWebSocket = () => {
+const useWebSocket = (name: string) => {
   const doc = new Y.Doc()
-  const wsProvider = new WebsocketProvider(`ws://localhost:${port}`, 'my-roomname', doc)
+  const wsProvider = new WebsocketProvider(`ws://localhost:${port}`, name, doc)
+
+  const yNodesMap = doc.getMap('nodes');
+  const yEdgesMap = doc.getMap('edges');
 
   return {
     doc,
+    yNodesMap,
+    yEdgesMap,
     wsProvider
   }
 }
 
-export function CardWithForm({ data }: { data: any }) {
-  console.log(data)
+// type CardNode = Node<{
+//   label: string
+// }, string>
+
+export function CardWithForm(/* props: NodeProps<CardNode> */) {
   return (
     <>
-      <Handle type="target" position={Position.Left} />
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Create project</CardTitle>
@@ -69,13 +77,14 @@ export function CardWithForm({ data }: { data: any }) {
           <Button>Deploy</Button>
         </CardFooter>
       </Card>
-      <Handle type="target" position={Position.Right} />
+      <Handle type="source" position={Position.Right} style={{ background: 'blue' }} />
+      <Handle type="target" position={Position.Left} style={{ background: 'red' }} />
     </>
   )
 }
 
-export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edge>() {
-  const { doc, wsProvider } = useMemo(() => useWebSocket(), [])
+export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edge>(props: { doc: Y.Doc, yNodesMap: Y.Map<unknown>, yEdgesMap: Y.Map<unknown> }) {
+  const { doc, yNodesMap, yEdgesMap } = props
 
   const { screenToFlowPosition, addNodes } = useReactFlow();
 
@@ -87,15 +96,6 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
 
   const getId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
   const nodeOrigin = [0.5, 0];
-
-  const yNodesMap = doc.getMap('nodes');
-  const yEdgesMap = doc.getMap('edges');
-
-  useEffect(() => {
-    return () => {
-      wsProvider.disconnect()
-    }
-  }, [])
 
   useEffect(() => {
     const syncNodes = (event: Y.YMapEvent<unknown>) => {
@@ -125,7 +125,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
     return () => {
       yNodesMap.unobserve(syncNodes);
     };
-  }, [])
+  })
 
   useEffect(() => {
     const syncEdges = (event: Y.YMapEvent<unknown>) => {
@@ -154,7 +154,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
     return () => {
       yEdgesMap.unobserve(syncEdges);
     };
-  }, []);
+  })
 
   function handleCreateNewNode() {
     const id = getId();
@@ -204,7 +204,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
         return newNodes
       });
     },
-    [],
+    [doc, yNodesMap],
   );
 
   const onEdgesChange: OnEdgesChange<EdgeType> = useCallback(
@@ -223,7 +223,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
         return newEdges
       })
     },
-    [],
+    [doc, yEdgesMap],
   )
 
   const onConnect: OnConnect = useCallback(
@@ -244,7 +244,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
         return newEdges;
       });
     },
-    [],
+    [doc, yEdgesMap],
   );
 
   const nodeTypes = useMemo(() => ({ card: CardWithForm }), []);
@@ -273,10 +273,18 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
   )
 }
 
-export function CanvasWithProvider() {
+export function CanvasWithProvider({ name }: { name: string }) {
+  const { doc, yNodesMap, yEdgesMap, wsProvider } = useWebSocket(name)
+
+  useEffect(() => {
+    return () => {
+      wsProvider.disconnect()
+    }
+  }, [wsProvider])
+
   return (
     <ReactFlowProvider>
-      <Canvas />
+      <Canvas doc={doc} yNodesMap={yNodesMap} yEdgesMap={yEdgesMap} />
     </ReactFlowProvider>
   )
 }
