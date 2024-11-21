@@ -1,7 +1,7 @@
 "use client"
 
 import * as Y from 'yjs'
-import { useCallback, useMemo, useEffect, useState, startTransition } from 'react'
+import { useCallback, useMemo, useEffect, useState, startTransition, useId } from 'react'
 
 import {
   ReactFlow,
@@ -25,13 +25,15 @@ import {
   NodeProps,
 } from '@xyflow/react';
 
-import { InputIcon, ResetIcon, RocketIcon } from '@radix-ui/react-icons'
+import { ArrowRightIcon, InputIcon, ResetIcon, RocketIcon } from '@radix-ui/react-icons'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@radix-ui/react-label';
 import { SimpleFloatingEdge } from './floating-edge';
 import { useDocumentStore } from './store';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 type CardNode = Node<{
   label: string
@@ -39,11 +41,10 @@ type CardNode = Node<{
 
 export function InputCard(props: NodeProps<CardNode>) {
   const { id } = props;
+  const reactId = useId()
   const name = useDocumentStore(state => state.name)
   const yContentMap = useDocumentStore(state => state.yContentMap)
   const [value, setValue] = useState('')
-
-  console.log('value', value)
 
   useEffect(() => {
     const syncContent = () => {
@@ -59,7 +60,7 @@ export function InputCard(props: NodeProps<CardNode>) {
     }
   }, [name])
 
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = event.target.value;
     yContentMap?.set(`${name}-${id}`, value)
   }
@@ -74,8 +75,8 @@ export function InputCard(props: NodeProps<CardNode>) {
           <form>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Name of your project" value={value} onChange={handleChange} />
+                <Label htmlFor={`${reactId}-data`}>Input Data</Label>
+                <Textarea rows={5} id={`${reactId}-data`} placeholder="Name of your project" value={value} onChange={handleChange} />
               </div>
               <div className="flex flex-col space-y-1.5">
               </div>
@@ -93,18 +94,35 @@ export function InputCard(props: NodeProps<CardNode>) {
 }
 
 export function OutputCard(props: NodeProps<CardNode>) {
-  const { id, selected } = props;
+  const { id } = props;
   const { getEdges } = useReactFlow();
+  const reactId = useId()
+  const name = useDocumentStore(state => state.name)
+  const yContentMap = useDocumentStore(state => state.yContentMap)
+  const [prompt, setPrompt] = useState('')
+  const [output, setOutput] = useState('')
+
+  const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPrompt(event.target.value)
+  }
 
   const getActiveConnections = useCallback(() => {
     const edges = getEdges();
     return edges.filter(edge => edge.source === id || edge.target === id);
   }, [id, getEdges]);
 
-  if (selected) {
+  const handleGenerate = () => {
     const activeConnections = getActiveConnections();
 
-    console.log('activeConnections', activeConnections);
+    const inputData = []
+    for (const edge of activeConnections) {
+      const source = edge.source
+      const content = yContentMap?.get(`${name}-${source}`)
+      inputData.push(content)
+    }
+
+    console.log('prompt', prompt)
+    console.log('inputData', inputData)
   }
 
   return (
@@ -114,17 +132,24 @@ export function OutputCard(props: NodeProps<CardNode>) {
           <CardTitle>Output</CardTitle>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Name of your project" />
-              </div>
-              <div className="flex flex-col space-y-1.5">
-              </div>
+          <div className="grid w-full items-center gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor={`${reactId}-prompt`}>Prompt</Label>
+              <Textarea rows={5} id={`${reactId}-prompt`} placeholder="Tell the AI what to do" name="prompt" value={prompt} onChange={handlePromptChange} />
             </div>
-          </form>
+
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor={`${reactId}-output`}>Output</Label>
+              <Textarea rows={5} id={`${reactId}-output`} name="output" disabled value={output} />
+            </div>
+          </div>
         </CardContent>
+        <CardFooter>
+          <Button variant="outline" onClick={handleGenerate}>
+            Generate
+            <ArrowRightIcon />
+          </Button>
+        </CardFooter>
       </Card>
 
       <Handle type="target" position={Position.Top} className="border-red-500" id="top" />
