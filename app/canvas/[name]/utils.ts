@@ -23,8 +23,9 @@ export function getParams<NodeType extends Node = Node>(nodeA: InternalNode<Node
 }
 
 export function getHandleCoordsByPosition<NodeType extends Node = Node>(node: InternalNode<NodeType>, handlePosition: Position) {
-  // all handles are from type source, that's why we use handleBounds.source here
-  const handle = node.internals.handleBounds?.source?.find(
+  const handleBounds = node.internals.handleBounds?.source ?? node.internals.handleBounds?.target;
+
+  const handle = handleBounds?.find(
     (h) => h.position === handlePosition,
   );
 
