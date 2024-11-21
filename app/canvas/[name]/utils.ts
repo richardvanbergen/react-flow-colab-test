@@ -1,7 +1,7 @@
 import { Position, Node, InternalNode } from '@xyflow/react';
 
 // returns the position (top,right,bottom or right) passed node compared to
-export function getParams<NodeType extends Node = Node>(nodeA: InternalNode<NodeType>, nodeB: InternalNode<NodeType>) {
+export function getParams<NodeType extends Node = Node>(nodeA: InternalNode<NodeType>, nodeB: InternalNode<NodeType>, type: 'source' | 'target') {
   const centerA = getNodeCenter(nodeA);
   const centerB = getNodeCenter(nodeB);
 
@@ -18,12 +18,12 @@ export function getParams<NodeType extends Node = Node>(nodeA: InternalNode<Node
     position = centerA.y > centerB.y ? Position.Top : Position.Bottom;
   }
 
-  const [x, y] = getHandleCoordsByPosition(nodeA, position);
+  const [x, y] = getHandleCoordsByPosition(nodeA, position, type);
   return [x, y, position];
 }
 
-export function getHandleCoordsByPosition<NodeType extends Node = Node>(node: InternalNode<NodeType>, handlePosition: Position) {
-  const handleBounds = node.internals.handleBounds?.source ?? node.internals.handleBounds?.target;
+export function getHandleCoordsByPosition<NodeType extends Node = Node>(node: InternalNode<NodeType>, handlePosition: Position, type: 'source' | 'target') {
+  const handleBounds = node.internals.handleBounds?.[type];
 
   const handle = handleBounds?.find(
     (h) => h.position === handlePosition,
@@ -73,8 +73,8 @@ export function getNodeCenter<NodeType extends Node = Node>(node: InternalNode<N
 
 // returns the parameters (sx, sy, tx, ty, sourcePos, targetPos) you need to create an edge
 export function getEdgeParams<NodeType extends Node = Node>(source: InternalNode<NodeType>, target: InternalNode<NodeType>) {
-  const [sx, sy, sourcePos] = getParams(source, target);
-  const [tx, ty, targetPos] = getParams(target, source);
+  const [sx, sy, sourcePos] = getParams(source, target, 'source');
+  const [tx, ty, targetPos] = getParams(target, source, 'target');
 
   return {
     sx,

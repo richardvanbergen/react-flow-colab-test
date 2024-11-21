@@ -186,10 +186,15 @@ export function OutputCard(props: NodeProps<CardNode>) {
         </CardFooter>
       </Card>
 
-      <Handle type="target" position={Position.Top} className="border-red-500" id="top" />
-      <Handle type="target" position={Position.Right} className="border-red-500" id="right" />
-      <Handle type="target" position={Position.Bottom} className="border-red-500" id="bottom" />
-      <Handle type="target" position={Position.Left} className="border-red-500" id="left" />
+      <Handle type="target" position={Position.Top} className="border-red-500" id="top" style={{ transform: 'translate(-20px, 0)' }} />
+      <Handle type="target" position={Position.Right} className="border-red-500" id="right" style={{ transform: 'translate(0, -20px)' }} />
+      <Handle type="target" position={Position.Bottom} className="border-red-500" id="bottom" style={{ transform: 'translate(-20px, 0)' }} />
+      <Handle type="target" position={Position.Left} className="border-red-500" id="left" style={{ transform: 'translate(0, -20px)' }} />
+
+      <Handle type="source" position={Position.Top} className="border-blue-500" id="top-source" style={{ transform: 'translate(20px, 0)' }} />
+      <Handle type="source" position={Position.Right} className="border-blue-500" id="right-source" style={{ transform: 'translate(0, 20px)' }} />
+      <Handle type="source" position={Position.Bottom} className="border-blue-500" id="bottom-source" style={{ transform: 'translate(20px, 0)' }} />
+      <Handle type="source" position={Position.Left} className="border-blue-500" id="left-source" style={{ transform: 'translate(0, 20px)' }} />
     </>
   )
 }
@@ -409,9 +414,9 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
             <RocketIcon />
           </ControlButton>
 
-          <ControlButton onClick={handleReset}>
+          {/* <ControlButton onClick={handleReset}>
             <ResetIcon />
-          </ControlButton>
+          </ControlButton> */}
         </Controls>
       </ReactFlow>
     </div>

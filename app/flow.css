@@ -93,22 +93,22 @@
 }
 
 .react-flow__node .react-flow__handle {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
  
 .react-flow__node .react-flow__handle-top {
-  top: -15px;
+  top: -20px;
 }
  
 .react-flow__node .react-flow__handle-bottom {
-  bottom: -15px;
+  bottom: -20px;
 }
  
 .react-flow__node .react-flow__handle-left {
-  left: -15px;
+  left: -20px;
 }
  
 .react-flow__node .react-flow__handle-right {
-  right: -15px;
+  right: -20px;
 }
