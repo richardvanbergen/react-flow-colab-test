@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import '@xyflow/react/dist/style.css';
 import "./globals.css";
+import './flow.css';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

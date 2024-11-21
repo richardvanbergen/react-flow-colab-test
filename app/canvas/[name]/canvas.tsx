@@ -21,15 +21,20 @@ import {
   OnEdgesChange,
   Position,
   Handle,
+  MarkerType,
+  ConnectionMode,
+  NodeProps,
+  useHandleConnections,
   // NodeProps,
 } from '@xyflow/react';
 
 import { PlusCircledIcon, ResetIcon } from '@radix-ui/react-icons'
-import '@xyflow/react/dist/style.css';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@radix-ui/react-label';
 import { Button } from '@/components/ui/button';
+import { SimpleFloatingEdge } from './floating-edge';
 
 const port = 1234
 
@@ -48,14 +53,19 @@ const useWebSocket = (name: string) => {
   }
 }
 
-// type CardNode = Node<{
-//   label: string
-// }, string>
+type CardNode = Node<{
+  label: string
+}, string>
 
-export function CardWithForm(/* props: NodeProps<CardNode> */) {
+export function CardWithForm(props: NodeProps<CardNode>) {
+  const { id, data, selected } = props;
+
+  const connections = useHandleConnections({ type: 'target', id: id });
+  console.log(connections);
+
   return (
     <>
-      <Card className="w-[350px]">
+      <Card className="w-[350px] card-node">
         <CardHeader>
           <CardTitle>Create project</CardTitle>
           <CardDescription>Deploy your new project in one-click.</CardDescription>
@@ -77,8 +87,11 @@ export function CardWithForm(/* props: NodeProps<CardNode> */) {
           <Button>Deploy</Button>
         </CardFooter>
       </Card>
-      <Handle type="source" position={Position.Right} style={{ background: 'blue' }} />
-      <Handle type="target" position={Position.Left} style={{ background: 'red' }} />
+
+      <Handle type="source" position={Position.Top} />
+      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Left} />
     </>
   )
 }
@@ -229,7 +242,12 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
   const onConnect: OnConnect = useCallback(
     (params) => {
       setEdges(eds => {
-        const newEdges = addEdge(params, eds);
+        const newEdges = addEdge(
+          {
+            ...params,
+            type: 'floating',
+            markerEnd: { type: MarkerType.ArrowClosed },
+          } as EdgeType, eds);
 
         doc.transact(() => {
           const edge = newEdges.find(
@@ -248,6 +266,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
   );
 
   const nodeTypes = useMemo(() => ({ card: CardWithForm }), []);
+  const edgeTypes = useMemo(() => ({ floating: SimpleFloatingEdge, }), []);
 
   return (
     <div className="h-screen w-screen">
@@ -255,6 +274,8 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        connectionMode={ConnectionMode.Loose}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
