@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bun server.ts",
+    "dev": "concurrently \"docker compose up websocket\" \"next dev\"",
+    "start": "concurrently \"docker compose up websocket\" \"next start\"",
     "build": "next build",
-    "start": "NODE_ENV=production bun server.ts",
     "lint": "next lint"
   },
   "dependencies": {
@@ -32,6 +32,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/ws": "^8.5.13",
+    "concurrently": "^9.1.0",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
