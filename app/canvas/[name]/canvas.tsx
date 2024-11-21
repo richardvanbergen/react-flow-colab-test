@@ -1,7 +1,6 @@
 "use client"
 
 import * as Y from 'yjs'
-import { WebsocketProvider } from 'y-websocket'
 import { useCallback, useMemo, useEffect, useState, startTransition } from 'react'
 
 import {
@@ -24,52 +23,45 @@ import {
   MarkerType,
   ConnectionMode,
   NodeProps,
-  // useHandleConnections,
-  // NodeProps,
 } from '@xyflow/react';
 
-import { InputIcon, PlusCircledIcon, ResetIcon, RocketIcon } from '@radix-ui/react-icons'
+import { InputIcon, ResetIcon, RocketIcon } from '@radix-ui/react-icons'
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@radix-ui/react-label';
-import { Button } from '@/components/ui/button';
 import { SimpleFloatingEdge } from './floating-edge';
-
-const port = 1234
-
-const useWebSocket = (name: string) => {
-  const doc = new Y.Doc()
-  const wsProvider = new WebsocketProvider(`ws://localhost:${port}`, name, doc)
-
-  const yNodesMap = doc.getMap('nodes');
-  const yEdgesMap = doc.getMap('edges');
-
-  return {
-    doc,
-    yNodesMap,
-    yEdgesMap,
-    wsProvider
-  }
-}
+import { useDocumentStore } from './store';
 
 type CardNode = Node<{
   label: string
 }, string>
 
 export function InputCard(props: NodeProps<CardNode>) {
-  const { id, selected } = props;
-  const { getEdges } = useReactFlow();
+  const { id } = props;
+  const name = useDocumentStore(state => state.name)
+  const yContentMap = useDocumentStore(state => state.yContentMap)
+  const [value, setValue] = useState('')
 
-  const getActiveConnections = useCallback(() => {
-    const edges = getEdges();
-    return edges.filter(edge => edge.source === id || edge.target === id);
-  }, [id, getEdges]);
+  console.log('value', value)
 
-  if (selected) {
-    const activeConnections = getActiveConnections();
+  useEffect(() => {
+    const syncContent = () => {
+      const content = yContentMap?.get(`${name}-${id}`)
+      setValue(content || '')
+    }
 
-    console.log('activeConnections', activeConnections);
+    yContentMap?.observe(syncContent)
+    syncContent()
+
+    return () => {
+      yContentMap?.unobserve(syncContent)
+    }
+  }, [name])
+
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+    yContentMap?.set(`${name}-${id}`, value)
   }
 
   return (
@@ -83,17 +75,13 @@ export function InputCard(props: NodeProps<CardNode>) {
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Name of your project" />
+                <Input id="name" placeholder="Name of your project" value={value} onChange={handleChange} />
               </div>
               <div className="flex flex-col space-y-1.5">
               </div>
             </div>
           </form>
         </CardContent>
-        {/* <CardFooter className="flex justify-between">
-          <Button variant="outline">Cancel</Button>
-          <Button>Deploy</Button>
-        </CardFooter> */}
       </Card>
 
       <Handle type="source" position={Position.Top} className="border-blue-500" id="top" />
@@ -137,10 +125,6 @@ export function OutputCard(props: NodeProps<CardNode>) {
             </div>
           </form>
         </CardContent>
-        {/* <CardFooter className="flex justify-between">
-          <Button variant="outline">Cancel</Button>
-          <Button>Deploy</Button>
-        </CardFooter> */}
       </Card>
 
       <Handle type="target" position={Position.Top} className="border-red-500" id="top" />
@@ -153,8 +137,11 @@ export function OutputCard(props: NodeProps<CardNode>) {
 
 
 
-export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edge>(props: { doc: Y.Doc, yNodesMap: Y.Map<unknown>, yEdgesMap: Y.Map<unknown> }) {
-  const { doc, yNodesMap, yEdgesMap } = props
+export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edge>() {
+  const doc = useDocumentStore(state => state.doc)
+  const yNodesMap = useDocumentStore(state => state.yNodesMap)
+  const yEdgesMap = useDocumentStore(state => state.yEdgesMap)
+  const resetDocument = useDocumentStore(state => state.resetDocument)
 
   const { screenToFlowPosition, addNodes } = useReactFlow();
 
@@ -166,15 +153,15 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
   const nodeOrigin = [0.5, 0];
 
   useEffect(() => {
-    const syncNodes = (event: Y.YMapEvent<unknown>) => {
+    const syncNodes = (event: Y.YMapEvent<Node>) => {
       setNodes(nds => {
         let newNodes = nds.map(n => {
-          const node = yNodesMap.get(n.id) as NodeType | undefined;
+          const node = yNodesMap?.get(n.id) as NodeType | undefined;
           return node ? node : n;
         });
 
         for (const key of event.keysChanged) {
-          const node = yNodesMap.get(key) as NodeType | undefined;
+          const node = yNodesMap?.get(key) as NodeType | undefined;
           if (node) {
             if (!nds.some(n => n.id === key)) {
               newNodes.push(node);
@@ -188,23 +175,23 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
       });
     };
 
-    yNodesMap.observe(syncNodes);
+    yNodesMap?.observe(syncNodes);
 
     return () => {
-      yNodesMap.unobserve(syncNodes);
+      yNodesMap?.unobserve(syncNodes);
     };
   })
 
   useEffect(() => {
-    const syncEdges = (event: Y.YMapEvent<unknown>) => {
+    const syncEdges = (event: Y.YMapEvent<Edge>) => {
       setEdges(eds => {
         let newEdges = eds.map(e => {
-          const edge = yEdgesMap.get(e.id) as EdgeType | undefined;
+          const edge = yEdgesMap?.get(e.id) as EdgeType | undefined;
           return edge ? edge : e;
         });
 
         for (const key of event.keysChanged) {
-          const edge = yEdgesMap.get(key) as EdgeType | undefined;
+          const edge = yEdgesMap?.get(key) as EdgeType | undefined;
           if (edge) {
             if (!eds.some(e => e.id === key)) {
               newEdges.push(edge);
@@ -218,10 +205,10 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
       });
     };
 
-    yEdgesMap.observe(syncEdges);
+    yEdgesMap?.observe(syncEdges);
 
     return () => {
-      yEdgesMap.unobserve(syncEdges);
+      yEdgesMap?.unobserve(syncEdges);
     };
   })
 
@@ -260,10 +247,7 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
   }
 
   const handleReset = () => {
-    doc.transact(() => {
-      yNodesMap.clear();
-      yEdgesMap.clear();
-    });
+    resetDocument()
     setNodes(initialNodes);
     setEdges([]);
   }
@@ -275,15 +259,15 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
         setNodes(nds => {
           const newNodes = applyNodeChanges(changes, nds)
 
-          doc.transact(() => {
+          doc?.transact(() => {
             changes.forEach(change => {
               if (change.type === 'remove') {
-                yNodesMap.delete(change.id)
+                yNodesMap?.delete(change.id)
               } else {
                 const id = change.type === 'add' ? change.item.id : change.id
                 const node = newNodes.find(n => n.id === id)
                 if (node) {
-                  yNodesMap.set(id, node)
+                  yNodesMap?.set(id, node)
                 }
               }
             })
@@ -301,10 +285,10 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
       setEdges(eds => {
         const newEdges = applyEdgeChanges(changes, eds)
 
-        doc.transact(() => {
+        doc?.transact(() => {
           changes.forEach(change => {
             if (change.type === 'remove') {
-              yEdgesMap.delete(change.id)
+              yEdgesMap?.delete(change.id)
             }
           })
         })
@@ -325,13 +309,13 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
             markerEnd: { type: MarkerType.ArrowClosed },
           } as EdgeType, eds);
 
-        doc.transact(() => {
+        doc?.transact(() => {
           const edge = newEdges.find(
             e => e.source === params.source && e.target === params.target
           );
 
           if (edge) {
-            yEdgesMap.set(edge.id, edge);
+            yEdgesMap?.set(edge.id, edge);
           }
         });
 
@@ -376,17 +360,21 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
 }
 
 export function CanvasWithProvider({ name }: { name: string }) {
-  const { doc, yNodesMap, yEdgesMap, wsProvider } = useWebSocket(name)
+  const wsProvider = useDocumentStore(state => state.wsProvider)
+  const connect = useDocumentStore(state => state.connect)
 
   useEffect(() => {
+    const port = 1234
+    connect(`ws://localhost:${port}`, name)
+
     return () => {
-      wsProvider.disconnect()
+      wsProvider?.disconnect()
     }
-  }, [wsProvider])
+  }, [connect, name])
 
   return (
     <ReactFlowProvider>
-      <Canvas doc={doc} yNodesMap={yNodesMap} yEdgesMap={yEdgesMap} />
+      <Canvas />
     </ReactFlowProvider>
   )
 }

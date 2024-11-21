@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"docker compose up websocket\" \"next dev\"",
-    "start": "concurrently \"docker compose up websocket\" \"next start\"",
+    "start": "next start",
     "build": "next build",
     "lint": "next lint"
   },
@@ -25,7 +25,8 @@
     "ws": "^8.18.0",
     "y-protocols": "^1.0.6",
     "y-websocket": "^2.0.4",
-    "yjs": "^13.6.20"
+    "yjs": "^13.6.20",
+    "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",
