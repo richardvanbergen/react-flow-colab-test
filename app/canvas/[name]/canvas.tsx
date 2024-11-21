@@ -2,6 +2,7 @@
 
 import * as Y from 'yjs'
 import { useCallback, useMemo, useEffect, useState, startTransition, useId } from 'react'
+import { experimental_useObject as useObject } from 'ai/react';
 
 import {
   ReactFlow,
@@ -28,12 +29,12 @@ import {
 import { ArrowRightIcon, InputIcon, ResetIcon, RocketIcon } from '@radix-ui/react-icons'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@radix-ui/react-label';
 import { SimpleFloatingEdge } from './floating-edge';
 import { useDocumentStore } from './store';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { outputSchema } from '@/app/api/chat/outputSchema';
 
 type CardNode = Node<{
   label: string
@@ -100,7 +101,11 @@ export function OutputCard(props: NodeProps<CardNode>) {
   const name = useDocumentStore(state => state.name)
   const yContentMap = useDocumentStore(state => state.yContentMap)
   const [prompt, setPrompt] = useState('')
-  const [output, setOutput] = useState('')
+
+  const { object, submit } = useObject({
+    api: '/api/chat',
+    schema: outputSchema,
+  });
 
   const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(event.target.value)
@@ -121,8 +126,13 @@ export function OutputCard(props: NodeProps<CardNode>) {
       inputData.push(content)
     }
 
-    console.log('prompt', prompt)
-    console.log('inputData', inputData)
+    const submissionInput = `
+    Input Data: ${inputData.join('\n')}
+
+    Prompt: ${prompt}
+    `
+
+    submit(submissionInput)
   }
 
   return (
@@ -140,7 +150,7 @@ export function OutputCard(props: NodeProps<CardNode>) {
 
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor={`${reactId}-output`}>Output</Label>
-              <Textarea rows={5} id={`${reactId}-output`} name="output" disabled value={output} />
+              <Textarea rows={5} id={`${reactId}-output`} name="output" disabled value={object?.output} />
             </div>
           </div>
         </CardContent>
