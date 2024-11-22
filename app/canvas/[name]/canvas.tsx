@@ -418,8 +418,6 @@ export function CanvasWithProvider({ name }: { name: string }) {
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER_URL
 
-    console.log('url', url)
-
     if (!url) {
       throw new Error('NEXT_PUBLIC_WEBSOCKET_SERVER_URL is not set')
     }
