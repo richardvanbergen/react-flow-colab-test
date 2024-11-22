@@ -20,3 +20,9 @@
 7. Open [http://localhost:3000](http://localhost:3000)
 8. Enter a name to join a canvas.
 9. Open the URL in another separate session.
+
+## Notes
+
+Almost all the code is in the `components` folder. The app folder is the routing
+and layout specific to Next.js. But the components can be easily used in any
+React project.
