@@ -1,9 +1,4 @@
-# fly.toml app configuration file generated for react-flow-colab-holy-pine-6446 on 2024-11-22T09:19:01+09:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = 'react-flow-colab-holy-pine-6446'
+app = 'colab-websockets'
 primary_region = 'nrt'
 
 [build]

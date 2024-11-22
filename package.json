@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"docker compose up websocket\" \"next dev\"",
-    "start": "next start",
+    "start": "node .next/standalone/server.js",
     "build": "next build",
     "lint": "next lint"
   },
