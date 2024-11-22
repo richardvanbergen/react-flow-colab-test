@@ -26,7 +26,7 @@ import {
   NodeProps,
 } from '@xyflow/react';
 
-import { ArrowRightIcon, InputIcon, ResetIcon, RocketIcon } from '@radix-ui/react-icons'
+import { ArrowRightIcon, InputIcon, RocketIcon } from '@radix-ui/react-icons'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@radix-ui/react-label';
@@ -205,11 +205,9 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
   const doc = useDocumentStore(state => state.doc)
   const yNodesMap = useDocumentStore(state => state.yNodesMap)
   const yEdgesMap = useDocumentStore(state => state.yEdgesMap)
-  const resetDocument = useDocumentStore(state => state.resetDocument)
 
   const { screenToFlowPosition, addNodes } = useReactFlow();
 
-  const initialNodes = [] as unknown as NodeType[];
   const [nodes, setNodes] = useState<NodeType[]>([]);
   const [edges, setEdges] = useState<EdgeType[]>([]);
 
@@ -308,12 +306,6 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
     } as unknown as NodeType;
 
     addNodes([newNode])
-  }
-
-  const handleReset = () => {
-    resetDocument()
-    setNodes(initialNodes);
-    setEdges([]);
   }
 
   const onNodesChange: OnNodesChange<NodeType> = useCallback(

@@ -1,9 +1,7 @@
 import { Edge, EdgeProps, getBezierPath, Position, useInternalNode } from '@xyflow/react';
 import { getEdgeParams } from './utils';
 
-type CustomEdge = Edge<{}, 'custom'>;
-
-export function SimpleFloatingEdge({ id, source, target, markerEnd, style }: EdgeProps<CustomEdge>) {
+export function SimpleFloatingEdge({ id, source, target, markerEnd, style }: EdgeProps<Edge>) {
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
 
