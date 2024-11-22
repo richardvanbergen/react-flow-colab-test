@@ -405,10 +405,6 @@ export function Canvas<NodeType extends Node = Node, EdgeType extends Edge = Edg
           <ControlButton onClick={handleCreateNewOutputNode}>
             <RocketIcon />
           </ControlButton>
-
-          {/* <ControlButton onClick={handleReset}>
-            <ResetIcon />
-          </ControlButton> */}
         </Controls>
       </ReactFlow>
     </div>
@@ -420,8 +416,13 @@ export function CanvasWithProvider({ name }: { name: string }) {
   const connect = useDocumentStore(state => state.connect)
 
   useEffect(() => {
-    const port = 1234
-    connect(`ws://localhost:${port}`, name)
+    const url = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER_URL
+
+    if (!url) {
+      throw new Error('WEBSOCKET_SERVER_URL is not set')
+    }
+
+    connect(url, name)
 
     return () => {
       wsProvider?.disconnect()
