@@ -1,6 +1,7 @@
-import { Position, Node, InternalNode } from '@xyflow/react';
+"use client";
 
-// returns the position (top,right,bottom or right) passed node compared to
+import { Node, InternalNode, Edge, EdgeProps, getBezierPath, Position, useInternalNode } from '@xyflow/react';
+
 export function getParams<NodeType extends Node = Node>(nodeA: InternalNode<NodeType>, nodeB: InternalNode<NodeType>, type: 'source' | 'target') {
   const centerA = getNodeCenter(nodeA);
   const centerB = getNodeCenter(nodeB);
@@ -10,11 +11,9 @@ export function getParams<NodeType extends Node = Node>(nodeA: InternalNode<Node
 
   let position: Position;
 
-  // when the horizontal difference between the nodes is bigger, we use Position.Left or Position.Right for the handle
   if (horizontalDiff > verticalDiff) {
     position = centerA.x > centerB.x ? Position.Left : Position.Right;
   } else {
-    // here the vertical difference between the nodes is bigger, so we use Position.Top or Position.Bottom for the handle
     position = centerA.y > centerB.y ? Position.Top : Position.Bottom;
   }
 
@@ -36,9 +35,6 @@ export function getHandleCoordsByPosition<NodeType extends Node = Node>(node: In
   let offsetX = handle.width / 2;
   let offsetY = handle.height / 2;
 
-  // this is a tiny detail to make the markerEnd of an edge visible.
-  // The handle position that gets calculated has the origin top-left, so depending which side we are using, we add a little offset
-  // when the handlePosition is Position.Right for example, we need to add an offset as big as the handle itself in order to get the correct position
   switch (handlePosition) {
     case Position.Left:
       offsetX = 0;
@@ -84,4 +80,38 @@ export function getEdgeParams<NodeType extends Node = Node>(source: InternalNode
     sourcePos,
     targetPos,
   };
+}
+
+export function SimpleFloatingEdge({ id, source, target, markerEnd, style }: EdgeProps<Edge>) {
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
+
+  if (!sourceNode || !targetNode) {
+    return null;
+  }
+
+  const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
+    sourceNode,
+    targetNode,
+  );
+
+  const [edgePath] = getBezierPath({
+    sourceX: sx as number,
+    sourceY: sy as number,
+    sourcePosition: sourcePos as Position,
+    targetPosition: targetPos as Position,
+    targetX: tx as number,
+    targetY: ty as number,
+  });
+
+  return (
+    <path
+      id={id}
+      className="react-flow__edge-path"
+      d={edgePath}
+      strokeWidth={5}
+      markerEnd={markerEnd}
+      style={style}
+    />
+  );
 }
